@@ -26,6 +26,6 @@ if ip_address:
         # Display the results as a column-wise table
         st.write('### IP Information')
         flattened_data = pd.json_normalize(ip_info).transpose()
-        st.dataframe(flattened_data)
+        st.dataframe(flattened_data, use_container_width=True)
         st.write('### Raw JSON Data')
         st.json(ip_info)
