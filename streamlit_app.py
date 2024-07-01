@@ -1,40 +1,31 @@
-import altair as alt
-import numpy as np
-import pandas as pd
 import streamlit as st
+from ipwhois import IPWhois
+from ipwhois.exceptions import IPDefinedError
+import pandas as pd
 
-"""
-# Welcome to Streamlit!
+def get_ip_info(ip_address):
+    try:
+        obj = IPWhois(ip_address)
+        results = obj.lookup_rdap()
+        return results
+    except IPDefinedError:
+        return {'error': 'Invalid IP address'}
+    except Exception as e:
+        return {'error': str(e)}
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+st.title('IP Address Lookup')
+st.write('Enter an IP address to get detailed information.')
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+ip_address = st.text_input('IP Address', '')
 
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
-
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
-
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
-
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
-
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
+if ip_address:
+    ip_info = get_ip_info(ip_address)
+    if 'error' in ip_info:
+        st.write(ip_info['error'])
+    else:
+        # Display the results as a column-wise table
+        st.write('### IP Information')
+        flattened_data = pd.json_normalize(ip_info).transpose()
+        st.dataframe(flattened_data)
+        st.write('### Raw JSON Data')
+        st.json(ip_info)
